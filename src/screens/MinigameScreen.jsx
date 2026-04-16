@@ -173,13 +173,7 @@ export default function MinigameScreen({ visible, room, gs, onExit, onSuccess, o
     <div id="screen-mg" className="on" style={{ display: 'flex' }}>
       <div id="mg-hint">
         <div id="mg-hint-hdr">⚠ ALIEN SIGNAL</div>
-        <button
-          onClick={() => setHintOpen(v => !v)}
-          style={{ fontSize: '10px', letterSpacing: '2px', color: hintOpen ? '#00f5ff' : '#ff6b00', background: 'none', border: `1px solid ${hintOpen ? 'rgba(0,245,255,0.4)' : 'rgba(255,107,0,0.4)'}`, padding: '5px 14px', cursor: 'pointer', borderRadius: '2px', width: '100%', marginTop: '4px' }}
-        >
-          {hintOpen ? '▲ HINT' : '▼ HINT'}
-        </button>
-        {hintOpen && (easy ? (
+        {easy ? (
           <>
             {gimmickMeta && (
               <div style={{ padding: '6px 10px', fontSize: '10px', letterSpacing: '2px', color: '#00f5ff', textAlign: 'center' }}>
@@ -193,9 +187,19 @@ export default function MinigameScreen({ visible, room, gs, onExit, onSuccess, o
               />
             </div>
             {gimmickMeta && (
-              <div className="mg-sigbox" style={{ whiteSpace: 'pre-line', fontSize: '10px', color: '#7ab', padding: '8px 10px', lineHeight: '1.6' }}>
-                {t.gimmickDesc[room.gimmick] ?? gimmickMeta.traitDesc}
-              </div>
+              <>
+                <button
+                  onClick={() => setHintOpen(v => !v)}
+                  style={{ fontSize: '10px', letterSpacing: '2px', color: hintOpen ? '#00f5ff' : '#ff6b00', background: 'none', border: `1px solid ${hintOpen ? 'rgba(0,245,255,0.4)' : 'rgba(255,107,0,0.4)'}`, padding: '5px 14px', cursor: 'pointer', borderRadius: '2px', width: '100%' }}
+                >
+                  {hintOpen ? '▲ HINT' : '▼ HINT'}
+                </button>
+                {hintOpen && (
+                  <div className="mg-sigbox" style={{ whiteSpace: 'pre-line', fontSize: '10px', color: '#7ab', padding: '8px 10px', lineHeight: '1.6' }}>
+                    {t.gimmickDesc[room.gimmick] ?? gimmickMeta.traitDesc}
+                  </div>
+                )}
+              </>
             )}
           </>
         ) : (
@@ -206,7 +210,7 @@ export default function MinigameScreen({ visible, room, gs, onExit, onSuccess, o
               <div id="mg-glyphs" dangerouslySetInnerHTML={{ __html: GESTURE_GLYPHS[room.id] || '' }} />
             </div>
           </>
-        ))}
+        )}
       </div>
       <div id="mg-right">
         <div id="mg-hud">
