@@ -10,7 +10,7 @@ import {
   initGimmick, drawGimmick, drawAlienGimmick, cleanupGimmick,
 } from '../game/minigameEngines';
 
-export default function MinigameScreen({ visible, room, gs, onExit, onSuccess, onFail }) {
+export default function MinigameScreen({ visible, room, gs, isMobile, onExit, onSuccess, onFail }) {
   const { t } = useLang();
   const canvasRef = useRef(null);
   const alienCanvasRef = useRef(null);
@@ -228,10 +228,24 @@ export default function MinigameScreen({ visible, room, gs, onExit, onSuccess, o
           <div id="mg-feedback" style={{ opacity: feedback.show ? 1 : 0, color: feedback.color }}>
             {feedback.msg}
           </div>
+          {isMobile && !easy && room?.id === 'monster_fight' && (
+            <div id="mg-move-btns">
+              <button
+                onPointerDown={e => { e.preventDefault(); gs.keys['ArrowUp'] = true; }}
+                onPointerUp={() => { gs.keys['ArrowUp'] = false; }}
+                onPointerLeave={() => { gs.keys['ArrowUp'] = false; }}
+              >▲</button>
+              <button
+                onPointerDown={e => { e.preventDefault(); gs.keys['ArrowDown'] = true; }}
+                onPointerUp={() => { gs.keys['ArrowDown'] = false; }}
+                onPointerLeave={() => { gs.keys['ArrowDown'] = false; }}
+              >▼</button>
+            </div>
+          )}
         </div>
         {!easy && (
           <div id="mg-tools">
-            <div id="mg-tlbl">TOOL [1~0]</div>
+            <div id="mg-tlbl">{isMobile ? 'TOOL' : 'TOOL [1~0]'}</div>
             <div id="mg-tbox">
               {TOOLS.map((tool, i) => (
                 <button
@@ -240,7 +254,7 @@ export default function MinigameScreen({ visible, room, gs, onExit, onSuccess, o
                   onClick={() => selTool(i)}
                 >
                   <span className="ti">{tool.emoji}</span>
-                  {i < 9 ? `[${i + 1}]` : '[0]'} {t.tools[tool.id] ?? tool.name}
+                  {!isMobile && (i < 9 ? `[${i + 1}] ` : '[0] ')}{t.tools[tool.id] ?? tool.name}
                 </button>
               ))}
             </div>

@@ -8,7 +8,7 @@ import {
 
 const REVEAL_RADIUS = 7;
 
-export default function MapScreen({ visible, gs, onEnterRoom, onWin }) {
+export default function MapScreen({ visible, gs, isMobile, onEnterRoom, onWin }) {
   const canvasRef = useRef(null);
   const mmRef = useRef(null);
   const animRef = useRef(null);
@@ -143,7 +143,33 @@ export default function MapScreen({ visible, gs, onEnterRoom, onWin }) {
         <div className="hl" style={{ marginTop: 4 }}>SCORE</div>
         <div className="hv">{gs.score}</div>
       </div>
-      <div id="map-tip">WASD / 방향키 이동 &nbsp;│&nbsp; 방 안으로 걸어 들어가기</div>
+      {isMobile ? (
+        <div id="map-dpad">
+          <button className="dp-btn dp-up"
+            onPointerDown={e => { e.preventDefault(); gs.keys['ArrowUp'] = true; }}
+            onPointerUp={() => { gs.keys['ArrowUp'] = false; }}
+            onPointerLeave={() => { gs.keys['ArrowUp'] = false; }}
+          >▲</button>
+          <button className="dp-btn dp-left"
+            onPointerDown={e => { e.preventDefault(); gs.keys['ArrowLeft'] = true; }}
+            onPointerUp={() => { gs.keys['ArrowLeft'] = false; }}
+            onPointerLeave={() => { gs.keys['ArrowLeft'] = false; }}
+          >◀</button>
+          <div className="dp-btn dp-center">·</div>
+          <button className="dp-btn dp-right"
+            onPointerDown={e => { e.preventDefault(); gs.keys['ArrowRight'] = true; }}
+            onPointerUp={() => { gs.keys['ArrowRight'] = false; }}
+            onPointerLeave={() => { gs.keys['ArrowRight'] = false; }}
+          >▶</button>
+          <button className="dp-btn dp-down"
+            onPointerDown={e => { e.preventDefault(); gs.keys['ArrowDown'] = true; }}
+            onPointerUp={() => { gs.keys['ArrowDown'] = false; }}
+            onPointerLeave={() => { gs.keys['ArrowDown'] = false; }}
+          >▼</button>
+        </div>
+      ) : (
+        <div id="map-tip">WASD / 방향키 이동 &nbsp;│&nbsp; 방 안으로 걸어 들어가기</div>
+      )}
     </div>
   );
 }

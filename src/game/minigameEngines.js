@@ -599,6 +599,9 @@ function _initRunJump(mgCvs, MG, showFeedback, mgFail, mgSuccess) {
   document.addEventListener('keydown',keyFn);
   MG._keyFns.push({fn:keyFn,type:'keydown'});
   mgCvs.onclick=doJump;
+  const touchJumpFn=e=>{e.preventDefault();doJump();};
+  mgCvs.addEventListener('touchstart',touchJumpFn,{passive:false});
+  MG._canvasFns.push({fn:touchJumpFn,type:'touchstart'});
 
   MG._rjUpdate=(dt,cw,ch)=>{
     if(MG.done) return;
@@ -681,6 +684,10 @@ function _initGlowHold(mgCvs, MG, showFeedback, mgFail, mgSuccess) {
   const mouseFn=e=>handlePress(e.type==='mousedown');
   mgCvs.addEventListener('mousedown',mouseFn);mgCvs.addEventListener('mouseup',mouseFn);
   MG._canvasFns.push({fn:mouseFn,type:'mousedown'});MG._canvasFns.push({fn:mouseFn,type:'mouseup'});
+  const touchHoldFn=e=>{e.preventDefault();handlePress(e.type==='touchstart');};
+  mgCvs.addEventListener('touchstart',touchHoldFn,{passive:false});
+  mgCvs.addEventListener('touchend',touchHoldFn,{passive:false});
+  MG._canvasFns.push({fn:touchHoldFn,type:'touchstart'});MG._canvasFns.push({fn:touchHoldFn,type:'touchend'});
 }
 function _drawGlowHold(ctx, MG, now, cw, ch) {
   const dt=MG._ghPrev?Math.min(now-MG._ghPrev,50):16; MG._ghPrev=now;
@@ -823,6 +830,17 @@ function _initDialTilt(mgCvs, MG, showFeedback, mgFail, mgSuccess) {
   };
   mgCvs.addEventListener('mousedown',mouseFn);mgCvs.addEventListener('mousemove',mouseFn);mgCvs.addEventListener('mouseup',mouseFn);
   MG._canvasFns.push({fn:mouseFn,type:'mousedown'});MG._canvasFns.push({fn:mouseFn,type:'mousemove'});MG._canvasFns.push({fn:mouseFn,type:'mouseup'});
+  const touchSliderFn=e=>{
+    const rect=mgCvs.getBoundingClientRect(),cw=mgCvs.width,ch=mgCvs.height;
+    const touch=e.touches[0]||e.changedTouches[0];
+    if(e.type==='touchstart'&&!MG.done){if(Math.abs(touch.clientY-rect.top-ch*0.52)<32){MG.dtDrag=true;e.preventDefault();}}
+    else if(e.type==='touchmove'&&MG.dtDrag){e.preventDefault();MG.dtSlider=Math.max(-1,Math.min(1,((touch.clientX-rect.left-cw*0.08)/(cw*0.84))*2-1));}
+    else{MG.dtDrag=false;}
+  };
+  mgCvs.addEventListener('touchstart',touchSliderFn,{passive:false});
+  mgCvs.addEventListener('touchmove',touchSliderFn,{passive:false});
+  mgCvs.addEventListener('touchend',touchSliderFn,{passive:false});
+  MG._canvasFns.push({fn:touchSliderFn,type:'touchstart'});MG._canvasFns.push({fn:touchSliderFn,type:'touchmove'});MG._canvasFns.push({fn:touchSliderFn,type:'touchend'});
   const clickFn=e=>{
     if(MG.done||MG.dtConfirmed)return;
     const rect=mgCvs.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;
@@ -946,6 +964,17 @@ function _initValveSpin(mgCvs, MG, showFeedback, mgFail, mgSuccess) {
   };
   mgCvs.addEventListener('mousedown',mouseFn);mgCvs.addEventListener('mousemove',mouseFn);mgCvs.addEventListener('mouseup',mouseFn);
   MG._canvasFns.push({fn:mouseFn,type:'mousedown'});MG._canvasFns.push({fn:mouseFn,type:'mousemove'});MG._canvasFns.push({fn:mouseFn,type:'mouseup'});
+  const touchValveFn=e=>{
+    const rect=mgCvs.getBoundingClientRect(),cw=mgCvs.clientWidth,ch=mgCvs.clientHeight,vcx=cw/2,vcy=ch*0.72;
+    const touch=e.touches[0]||e.changedTouches[0];
+    if(e.type==='touchstart'){const dx=touch.clientX-rect.left-vcx,dy=touch.clientY-rect.top-vcy;if(Math.sqrt(dx*dx+dy*dy)<70){MG.vsDrag=true;MG.vsDragAngle=Math.atan2(dy,dx);e.preventDefault();}}
+    else if(e.type==='touchmove'&&MG.vsDrag){e.preventDefault();const dx=touch.clientX-rect.left-vcx,dy=touch.clientY-rect.top-vcy,ang=Math.atan2(dy,dx);let diff=ang-MG.vsDragAngle;if(diff>Math.PI)diff-=Math.PI*2;if(diff<-Math.PI)diff+=Math.PI*2;MG.vsDragAngle=ang;if(!MG.done)checkValve(diff);}
+    else{MG.vsDrag=false;}
+  };
+  mgCvs.addEventListener('touchstart',touchValveFn,{passive:false});
+  mgCvs.addEventListener('touchmove',touchValveFn,{passive:false});
+  mgCvs.addEventListener('touchend',touchValveFn,{passive:false});
+  MG._canvasFns.push({fn:touchValveFn,type:'touchstart'});MG._canvasFns.push({fn:touchValveFn,type:'touchmove'});MG._canvasFns.push({fn:touchValveFn,type:'touchend'});
   const keyFn=e=>{if(MG.done)return;if(e.key==='ArrowLeft'||e.key==='ArrowRight')checkValve(e.key==='ArrowRight'?0.12:-0.12);};
   document.addEventListener('keydown',keyFn);MG._keyFns.push({fn:keyFn,type:'keydown'});
 }

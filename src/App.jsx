@@ -8,6 +8,8 @@ import { ROOMS, pickGimmicks } from './constants';
 import { useLang } from './LangContext';
 import { setEngineLang } from './game/minigameEngines';
 
+const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
 export default function App() {
   const [phase, setPhase] = useState('title');
   const [gameKey, setGameKey] = useState(0);
@@ -92,6 +94,7 @@ export default function App() {
         key={gameKey}
         visible={phase === 'map'}
         gs={gs}
+        isMobile={isMobile}
         onEnterRoom={handleEnterRoom}
         onWin={() => setPhase('ending')}
       />
@@ -100,6 +103,7 @@ export default function App() {
         visible={phase === 'mg'}
         room={currentRoom}
         gs={gs}
+        isMobile={isMobile}
         onExit={handleExitMG}
         onSuccess={handleMGSuccess}
         onFail={handleMGFail}
