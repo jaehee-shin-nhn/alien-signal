@@ -1,7 +1,12 @@
 import { useEffect, useRef } from 'react';
 import mapBg from '../assets/map.png';
-import { TS, ROOMS } from '../constants';
-import { buildMap, openDoor, walkable, drawMap, drawMinimap, getCamTarget, easeOut } from '../game/mapEngine';
+import { TS } from '../constants';
+import {
+  buildMap, openDoor, walkable, drawMap, drawMinimap,
+  getCamTarget, easeOut, revealExplored,
+} from '../game/mapEngine';
+
+const REVEAL_RADIUS = 7;
 
 export default function MapScreen({ visible, gs, onEnterRoom, onWin }) {
   const canvasRef = useRef(null);
@@ -23,14 +28,23 @@ export default function MapScreen({ visible, gs, onEnterRoom, onWin }) {
     }
     resize();
 
-    // Init or reuse map state
+    // 맵 상태 초기화 (재입장 시 유지)
     if (!stateRef.current) {
-      const { mapData, doorOpen, alienColors } = buildMap();
-      const P = { tx: 31, ty: 24, px: 31 * TS, py: 24 * TS, fx: 31 * TS, fy: 24 * TS, animT: 1, dir: 'down', step: 0 };
+      const { mapData, doorOpen, alienColors, rooms, start, explored } = buildMap();
+      const spawnTx = start.rx + Math.floor(start.rw / 2);
+      const spawnTy = start.ry + Math.floor(start.rh / 2);
+      const P = {
+        tx: spawnTx, ty: spawnTy,
+        px: spawnTx * TS, py: spawnTy * TS,
+        fx: spawnTx * TS, fy: spawnTy * TS,
+        animT: 1, dir: 'down', step: 0,
+      };
       const cam = getCamTarget(P.px, P.py, canvas.width, canvas.height);
-      stateRef.current = { mapData, doorOpen, alienColors, P, camX: cam.x, camY: cam.y };
+      stateRef.current = { mapData, doorOpen, alienColors, rooms, start, explored, P, camX: cam.x, camY: cam.y };
       gs.mapData = mapData;
       gs.doorOpen = doorOpen;
+      // 스폰 지점 주변 즉시 reveal
+      revealExplored(explored, P.tx, P.ty, REVEAL_RADIUS);
     }
 
     const s = stateRef.current;
@@ -39,10 +53,10 @@ export default function MapScreen({ visible, gs, onEnterRoom, onWin }) {
     function loop(now) {
       if (!visible) return;
       const dt = Math.min(now - prev, 50); prev = now;
-      const { mapData, doorOpen, P } = s;
+      const { mapData, doorOpen, rooms, start, explored, P } = s;
       const cw = canvas.width, ch = canvas.height;
 
-      // Movement
+      // 이동 애니메이션
       if (P.animT < 1) {
         P.animT = Math.min(1, P.animT + dt / 200);
         const e = easeOut(P.animT);
@@ -57,36 +71,39 @@ export default function MapScreen({ visible, gs, onEnterRoom, onWin }) {
         if (!walkable(mapData, nx, ny)) return;
         P.fx = P.tx * TS; P.fy = P.ty * TS;
         P.tx = nx; P.ty = ny; P.animT = 0; P.step ^= 1;
+        revealExplored(explored, nx, ny, REVEAL_RADIUS);
       }
 
       if (P.animT >= 1) {
-        if (gs.keys['ArrowLeft'] || gs.keys['a'])       tryMove(-1, 0, 'left');
+        if (gs.keys['ArrowLeft']  || gs.keys['a']) tryMove(-1, 0, 'left');
         else if (gs.keys['ArrowRight'] || gs.keys['d']) tryMove(1, 0, 'right');
-        else if (gs.keys['ArrowUp'] || gs.keys['w'])    tryMove(0, -1, 'up');
-        else if (gs.keys['ArrowDown'] || gs.keys['s'])  tryMove(0, 1, 'down');
+        else if (gs.keys['ArrowUp']    || gs.keys['w']) tryMove(0, -1, 'up');
+        else if (gs.keys['ArrowDown']  || gs.keys['s']) tryMove(0, 1, 'down');
       }
 
-      // Room entry detection
+      // 방 진입 감지
       if (P.animT >= 1) {
-        for (const r of ROOMS) {
+        for (const r of rooms) {
           if (gs.clearedRooms.has(r.id)) continue;
           if (doorOpen[r.id] && P.tx >= r.rx && P.tx < r.rx + r.rw && P.ty >= r.ry && P.ty < r.ry + r.rh) {
             onEnterRoom(r); return;
           }
         }
-        // Win condition
-        if (gs.clearedRooms.size >= 3 && Math.abs(P.tx - 31) + Math.abs(P.ty - 23) <= 2) {
+        // 클리어 조건: 3개 이상 수리 후 START 중심 복귀
+        const exitTx = start.rx + Math.floor(start.rw / 2);
+        const exitTy = start.ry + Math.floor(start.rh / 2);
+        if (gs.clearedRooms.size >= 3 && Math.abs(P.tx - exitTx) + Math.abs(P.ty - exitTy) <= 2) {
           onWin(); return;
         }
       }
 
-      // Camera lerp
+      // 카메라 lerp
       const target = getCamTarget(P.px, P.py, cw, ch);
       s.camX += (target.x - s.camX) * 0.1;
       s.camY += (target.y - s.camY) * 0.1;
 
-      drawMap(ctx, mapData, doorOpen, gs.clearedRooms, P, s.camX, s.camY, cw, ch, now, s.alienColors);
-      drawMinimap(mmCtx, mapData, gs.clearedRooms, P, 130, 100, now);
+      drawMap(ctx, mapData, doorOpen, gs.clearedRooms, rooms, start, P, s.camX, s.camY, cw, ch, now, s.alienColors);
+      drawMinimap(mmCtx, mapData, gs.clearedRooms, rooms, P, 130, 100, now, explored);
 
       animRef.current = requestAnimationFrame(loop);
     }
@@ -102,11 +119,11 @@ export default function MapScreen({ visible, gs, onEnterRoom, onWin }) {
     };
   }, [visible]);
 
-  // Sync cleared rooms / door opens from outside
+  // 미니게임 클리어 후 문 열림 동기화
   useEffect(() => {
     if (!stateRef.current) return;
     const s = stateRef.current;
-    for (const r of ROOMS) {
+    for (const r of s.rooms) {
       if (gs.clearedRooms.has(r.id) || gs.doorOpen?.[r.id]) {
         openDoor(s.mapData, s.doorOpen, r);
       }

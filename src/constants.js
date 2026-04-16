@@ -10,18 +10,13 @@ export const TOOLS = [
   { id: 'zapper',       name: '재퍼',   emoji: '⚡' },
 ];
 
+// 위치 정보 없는 정적 방 정의 (위치는 buildMap()에서 랜덤 생성)
 export const ROOMS = [
-  { id: 'bolt_loose', name: 'BRIDGE',    color: '#080800', border: '#555500', light: '#ffbb00',
-    rx: 3,  ry: 20, rw: 10, rh: 8, doorTx: 13, doorTy: 24, alienTx: 14, alienTy: 24 },
-  { id: 'bug_hunt',   name: 'STORAGE',   color: '#001510', border: '#006644', light: '#00cc88',
-    rx: 50, ry: 20, rw: 11, rh: 8, doorTx: 49, doorTy: 24, alienTx: 48, alienTy: 24 },
-  { id: 'fire_out',   name: 'CARGO BAY', color: '#180400', border: '#771100', light: '#ff2200',
-    rx: 3,  ry: 36, rw: 10, rh: 8, doorTx: 13, doorTy: 40, alienTx: 14, alienTy: 40 },
-  { id: 'monster_fight', name: 'ENGINE ROOM', color: '#000a18', border: '#002266', light: '#0066ff',
-    rx: 50, ry: 36, rw: 10, rh: 8, doorTx: 49, doorTy: 40, alienTx: 48, alienTy: 40 },
+  { id: 'bolt_loose',    name: 'BRIDGE',      color: '#080800', border: '#555500', light: '#ffbb00' },
+  { id: 'bug_hunt',      name: 'STORAGE',     color: '#001510', border: '#006644', light: '#00cc88' },
+  { id: 'fire_out',      name: 'CARGO BAY',   color: '#180400', border: '#771100', light: '#ff2200' },
+  { id: 'monster_fight', name: 'ENGINE ROOM', color: '#000a18', border: '#002266', light: '#0066ff' },
 ];
-
-export const START = { rx: 27, ry: 20, rw: 10, rh: 8 };
 
 export const ALL_GIMMICKS = [
   'color_btn', 'run_jump', 'glow_hold', 'symbol_body',
