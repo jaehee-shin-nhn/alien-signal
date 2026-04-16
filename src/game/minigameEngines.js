@@ -134,7 +134,6 @@ export function initBug(mgCvs, MG, showFeedback, mgFail, mgSuccess) {
 
 export function drawBug(ctx, MG, now, cw, ch) {
   ctx.clearRect(0, 0, cw, ch);
-  ctx.fillStyle = '#0c0318'; ctx.fillRect(0, 0, cw, ch * 0.33);
   ctx.strokeStyle = 'rgba(100,0,200,0.18)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(0, ch * 0.33); ctx.lineTo(cw, ch * 0.33); ctx.stroke();
   ctx.fillStyle = '#100308'; ctx.fillRect(0, ch * 0.86, cw, ch * 0.14);
@@ -447,11 +446,6 @@ export function drawFireOut(ctx, MG, now, cw, ch) {
   ctx.fillStyle = '#120500'; ctx.fillRect(0, ch * 0.8, cw, ch * 0.2);
   ctx.strokeStyle = '#330d00'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(0, ch * 0.8); ctx.lineTo(cw, ch * 0.8); ctx.stroke();
-  for (let c = 0; c < 4; c++) {
-    const sx = cw * (0.22 + c * 0.18), sw = cw * 0.13;
-    ctx.fillStyle = '#1c0700'; ctx.fillRect(sx, ch * 0.22, 8, ch * 0.57); ctx.fillRect(sx + sw - 8, ch * 0.22, 8, ch * 0.57);
-    for (let row = 0; row < 3; row++) { ctx.fillStyle = '#1f0900'; ctx.fillRect(sx, ch * (0.25 + row * 0.17), sw, 8); }
-  }
   MG.fires.forEach((f, i) => {
     if (f.stage === 0) {
       for (let s = 0; s < 2; s++) {
@@ -941,7 +935,7 @@ function _initValveSpin(mgCvs, MG, showFeedback, mgFail, mgSuccess) {
   function checkValve(diff){
     const dir=diff>0?'right':'left';MG.vsLastDir=dir;MG.vsAngle+=diff;
     if(dir===MG.vsDir){MG.vsTurns=Math.min(MG.vsNeeded+0.05,MG.vsTurns+Math.abs(diff)/(Math.PI*2));}
-    else{if(!MG._vsDone){MG._vsDone=true;showFeedback('✗ WRONG WAY!','#ff3333');mgFail();beep(180,0.3);const t=setTimeout(()=>{MG.vsDir=Math.random()<0.5?'left':'right';MG.vsAngle=0;MG.vsTurns=0;MG._vsDone=false;},900);MG._timers.push(t);return;}}
+    else{if(!MG._wrongWarnCd){MG._wrongWarnCd=true;showFeedback('⚠ WRONG WAY!','#ff9900');beep(180,0.15);const tw=setTimeout(()=>{MG._wrongWarnCd=false;},800);MG._timers.push(tw);}return;}
     if(MG.vsTurns>=MG.vsNeeded&&!MG._vsDone){MG._vsDone=true;spawnParts(mgCvs.width/2,mgCvs.height*0.72,'#39ff14',35);beep(880,0.1);beep(1100,0.08,0.14);MG.vsRound++;showFeedback(`✓ ${MG.vsRound}/${MG.vsGoal}`,'#39ff14');if(MG.vsRound>=MG.vsGoal){const t=setTimeout(()=>mgSuccess(),500);MG._timers.push(t);}else{const t=setTimeout(()=>{MG.vsDir=Math.random()<0.5?'left':'right';MG.vsAngle=0;MG.vsTurns=0;MG._vsDone=false;MG.vsLastDir='';},900);MG._timers.push(t);}}
   }
   const mouseFn=e=>{
