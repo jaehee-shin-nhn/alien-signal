@@ -3,12 +3,14 @@ import TitleScreen from './screens/TitleScreen';
 import MapScreen from './screens/MapScreen';
 import MinigameScreen from './screens/MinigameScreen';
 import ResultScreen from './screens/ResultScreen';
+import EndingScreen from './screens/EndingScreen';
 import { ROOMS, pickGimmicks } from './constants';
 import { useLang } from './LangContext';
 import { setEngineLang } from './game/minigameEngines';
 
 export default function App() {
   const [phase, setPhase] = useState('title');
+  const [gameKey, setGameKey] = useState(0);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [, forceUpdate] = useState(0);
   const [flashColor, setFlashColor] = useState(null);
@@ -54,6 +56,7 @@ export default function App() {
       const gimmicks = pickGimmicks();
       ROOMS.forEach((room, i) => { gs.roomGimmicks[room.id] = gimmicks[i]; });
     }
+    setGameKey(k => k + 1);
     setPhase('map');
   }
 
@@ -86,10 +89,11 @@ export default function App() {
       {phase === 'title' && <TitleScreen onStart={handleStart} />}
 
       <MapScreen
+        key={gameKey}
         visible={phase === 'map'}
         gs={gs}
         onEnterRoom={handleEnterRoom}
-        onWin={() => setPhase('result')}
+        onWin={() => setPhase('ending')}
       />
 
       <MinigameScreen
@@ -106,6 +110,13 @@ export default function App() {
           score={gs.score}
           mistakes={gs.mistakes}
           isWin={gs.clearedRooms.size >= 3}
+        />
+      )}
+
+      {phase === 'ending' && (
+        <EndingScreen
+          difficulty={gs.difficulty}
+          onRestart={() => setPhase('title')}
         />
       )}
 
