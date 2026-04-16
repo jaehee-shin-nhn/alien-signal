@@ -1,5 +1,46 @@
 import { TS, MW, MH, WALL, FLOOR, ROOMS, START } from '../constants';
 
+import playerFrontIdle  from '../assets/player_front_idle.png';
+import playerFrontWalk1 from '../assets/player_front_walk1.png';
+import playerFrontWalk2 from '../assets/player_front_walk2.png';
+import playerBackIdle   from '../assets/player_back_idle.png';
+import playerBackWalk1  from '../assets/player_back_walk1.png';
+import playerBackWalk2  from '../assets/player_back_walk2.png';
+import playerLeftIdle   from '../assets/player_left_idle.png';
+import playerLeftWalk1  from '../assets/player_left_walk1.png';
+import playerLeftWalk2  from '../assets/player_left_walk2.png';
+import playerRightIdle  from '../assets/player_right_idle.png';
+import playerRightWalk1 from '../assets/player_right_walk1.png';
+import playerRightWalk2 from '../assets/player_right_walk2.png';
+
+import alienBlue   from '../assets/alien_blue.png';
+import alienGreen  from '../assets/alien_green.png';
+import alienOrange from '../assets/alien_orange.png';
+import alienPink   from '../assets/alien_pink.png';
+import alienPurple from '../assets/alien_purple.png';
+import alienRed    from '../assets/alien_red.png';
+import alienTeal   from '../assets/alien_teal.png';
+import alienYellow from '../assets/alien_yellow.png';
+
+const PLAYER_IMGS = {
+  down:  { idle: playerFrontIdle,  walk1: playerFrontWalk1,  walk2: playerFrontWalk2 },
+  up:    { idle: playerBackIdle,   walk1: playerBackWalk1,   walk2: playerBackWalk2 },
+  left:  { idle: playerLeftIdle,   walk1: playerLeftWalk1,   walk2: playerLeftWalk2 },
+  right: { idle: playerRightIdle,  walk1: playerRightWalk1,  walk2: playerRightWalk2 },
+};
+
+const ALIEN_IMG_MAP = {
+  blue: alienBlue, green: alienGreen, orange: alienOrange, pink: alienPink,
+  purple: alienPurple, red: alienRed, teal: alienTeal, yellow: alienYellow,
+};
+const ALIEN_COLOR_KEYS = Object.keys(ALIEN_IMG_MAP);
+
+const _imgs = {};
+function getImg(src) {
+  if (!_imgs[src]) { const i = new Image(); i.src = src; _imgs[src] = i; }
+  return _imgs[src];
+}
+
 export function buildMap() {
   const mapData = Array.from({ length: MH }, () => new Uint8Array(MW).fill(WALL));
   const doorOpen = {};
@@ -34,7 +75,11 @@ export function buildMap() {
   digH(24, 30, 49);
   digH(40, 30, 49);
 
-  return { mapData, doorOpen };
+  const shuffled = [...ALIEN_COLOR_KEYS].sort(() => Math.random() - 0.5);
+  const alienColors = {};
+  ROOMS.forEach((r, i) => { alienColors[r.id] = shuffled[i]; });
+
+  return { mapData, doorOpen, alienColors };
 }
 
 export function openDoor(mapData, doorOpen, room) {
@@ -59,7 +104,7 @@ export function walkable(mapData, tx, ty) {
   return mapData[ty][tx] === FLOOR;
 }
 
-export function drawMap(ctx, mapData, doorOpen, clearedRooms, P, camX, camY, cw, ch, now) {
+export function drawMap(ctx, mapData, doorOpen, clearedRooms, P, camX, camY, cw, ch, now, alienColors = {}) {
   ctx.clearRect(0, 0, cw, ch);
   ctx.save();
   ctx.translate(-Math.round(camX), -Math.round(camY));
@@ -130,7 +175,7 @@ export function drawMap(ctx, mapData, doorOpen, clearedRooms, P, camX, camY, cw,
         ctx.font = '11px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('🔒', dx + TS / 2, dy + TS);
       }
-      drawMapAlien(ctx, r, P, now);
+      drawMapAlien(ctx, r, P, now, alienColors[r.id] || 'blue');
     }
   }
 
@@ -157,51 +202,34 @@ export function drawMap(ctx, mapData, doorOpen, clearedRooms, P, camX, camY, cw,
   ctx.restore();
 }
 
-function drawMapAlien(ctx, r, P, now) {
+function drawMapAlien(ctx, r, P, now, color) {
   const ax = r.alienTx * TS + TS / 2, ay = r.alienTy * TS + TS / 2;
   const p = 0.5 + 0.5 * Math.sin(now / 300 + r.rx);
   const grd = ctx.createRadialGradient(ax, ay, 0, ax, ay, TS);
   grd.addColorStop(0, r.light + '55'); grd.addColorStop(1, 'transparent');
   ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(ax, ay, TS, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#7b4ea0';
-  ctx.beginPath(); ctx.ellipse(ax, ay + 3, 9, 11, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#9b6ec0';
-  ctx.beginPath(); ctx.arc(ax, ay - 9, 8, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.ellipse(ax - 3, ay - 10, 2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(ax + 3, ay - 10, 2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#220044';
-  ctx.beginPath(); ctx.arc(ax - 3, ay - 10, 1, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(ax + 3, ay - 10, 1, 0, Math.PI * 2); ctx.fill();
+  const img = getImg(ALIEN_IMG_MAP[color] || ALIEN_IMG_MAP.blue);
+  const iw = 40, ih = 52;
+  ctx.drawImage(img, ax - iw / 2, ay - ih / 2 - 4, iw, ih);
   const dist = Math.abs(P.tx - r.alienTx) + Math.abs(P.ty - r.alienTy);
   if (dist <= 3) {
     ctx.fillStyle = `rgba(255,107,0,${0.7 + 0.3 * p})`;
     ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('?', ax, ay - 20);
+    ctx.fillText('?', ax, ay - 30);
   }
 }
 
 export function drawPlayer(ctx, P) {
-  const cx = P.px + TS / 2, cy = P.py + TS / 2 + 3;
+  const cx = P.px + TS / 2;
   const wp = P.animT < 1 ? Math.sin(P.animT * Math.PI) : 0;
-  const bob = P.animT < 1 ? -Math.abs(wp) * 2 : 0;
-  const ll = P.step === 0 ? wp * 5 : -wp * 5, rl = -ll;
+  const bob = P.animT < 1 ? -Math.abs(wp) * 3 : 0;
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.beginPath(); ctx.ellipse(cx, cy + 14, 10, 3.5, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#2e1e14';
-  ctx.fillRect(cx - 7, cy + 3 + bob, 5, 11 + ll);
-  ctx.fillRect(cx + 2, cy + 3 + bob, 5, 11 + rl);
-  ctx.fillStyle = '#1a6dad'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 15);
-  ctx.fillStyle = '#2386d6'; ctx.fillRect(cx - 9, cy - 10 + bob, 8, 15);
-  ctx.fillStyle = '#f5c8a0';
-  ctx.beginPath(); ctx.arc(cx, cy - 18 + bob, 10, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#3d2010';
-  ctx.beginPath(); ctx.arc(cx, cy - 20 + bob, 10, Math.PI * 0.9, Math.PI * 2.1); ctx.fill();
-  ctx.fillRect(cx - 10, cy - 27 + bob, 20, 8);
-  ctx.fillStyle = '#1a0a00';
-  if (P.dir === 'down') { ctx.fillRect(cx - 4, cy - 19 + bob, 3, 3); ctx.fillRect(cx + 1, cy - 19 + bob, 3, 3); }
-  else if (P.dir === 'left') ctx.fillRect(cx - 7, cy - 19 + bob, 3, 3);
-  else if (P.dir === 'right') ctx.fillRect(cx + 4, cy - 19 + bob, 3, 3);
+  ctx.beginPath(); ctx.ellipse(cx, P.py + TS - 3, 10, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+  const dirs = PLAYER_IMGS[P.dir] || PLAYER_IMGS.down;
+  const imgSrc = P.animT >= 1 ? dirs.idle : (P.step === 0 ? dirs.walk1 : dirs.walk2);
+  const img = getImg(imgSrc);
+  const iw = 40, ih = 52;
+  ctx.drawImage(img, P.px, P.py + TS - ih + bob, iw, ih);
 }
 
 export function drawMinimap(mmCtx, mapData, clearedRooms, P, mw, mh, now) {

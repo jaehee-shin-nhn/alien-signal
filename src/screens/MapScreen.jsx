@@ -25,10 +25,10 @@ export default function MapScreen({ visible, gs, onEnterRoom, onWin }) {
 
     // Init or reuse map state
     if (!stateRef.current) {
-      const { mapData, doorOpen } = buildMap();
+      const { mapData, doorOpen, alienColors } = buildMap();
       const P = { tx: 31, ty: 24, px: 31 * TS, py: 24 * TS, fx: 31 * TS, fy: 24 * TS, animT: 1, dir: 'down', step: 0 };
       const cam = getCamTarget(P.px, P.py, canvas.width, canvas.height);
-      stateRef.current = { mapData, doorOpen, P, camX: cam.x, camY: cam.y };
+      stateRef.current = { mapData, doorOpen, alienColors, P, camX: cam.x, camY: cam.y };
       gs.mapData = mapData;
       gs.doorOpen = doorOpen;
     }
@@ -44,7 +44,7 @@ export default function MapScreen({ visible, gs, onEnterRoom, onWin }) {
 
       // Movement
       if (P.animT < 1) {
-        P.animT = Math.min(1, P.animT + dt / 115);
+        P.animT = Math.min(1, P.animT + dt / 200);
         const e = easeOut(P.animT);
         P.px = P.fx + (P.tx * TS - P.fx) * e;
         P.py = P.fy + (P.ty * TS - P.fy) * e;
@@ -85,7 +85,7 @@ export default function MapScreen({ visible, gs, onEnterRoom, onWin }) {
       s.camX += (target.x - s.camX) * 0.1;
       s.camY += (target.y - s.camY) * 0.1;
 
-      drawMap(ctx, mapData, doorOpen, gs.clearedRooms, P, s.camX, s.camY, cw, ch, now);
+      drawMap(ctx, mapData, doorOpen, gs.clearedRooms, P, s.camX, s.camY, cw, ch, now, s.alienColors);
       drawMinimap(mmCtx, mapData, gs.clearedRooms, P, 130, 100, now);
 
       animRef.current = requestAnimationFrame(loop);
