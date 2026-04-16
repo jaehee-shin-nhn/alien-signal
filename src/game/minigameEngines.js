@@ -930,13 +930,13 @@ function _drawAlienWireConnect(ctx, MG, now, cw, ch) {
 // ── 8. VALVE SPIN ──
 function _initValveSpin(mgCvs, MG, showFeedback, mgFail, mgSuccess) {
   MG.vsDir=Math.random()<0.5?'left':'right';MG.vsAngle=0;MG.vsAlienAngle=0;MG.vsRound=0;MG.vsGoal=4;
-  MG.vsDrag=false;MG.vsDragAngle=0;MG.vsLastDir='';MG.vsTurns=0;MG.vsNeeded=2;MG._vsDone=false;
+  MG.vsDrag=false;MG.vsDragAngle=0;MG.vsLastDir='';MG.vsTurns=0;MG.vsNetTurns=0;MG.vsNeeded=2;MG._vsDone=false;
 
   function checkValve(diff){
     const dir=diff>0?'right':'left';MG.vsLastDir=dir;MG.vsAngle+=diff;
-    if(dir===MG.vsDir){MG.vsTurns=Math.min(MG.vsNeeded+0.05,MG.vsTurns+Math.abs(diff)/(Math.PI*2));}
-    else{if(!MG._wrongWarnCd){MG._wrongWarnCd=true;showFeedback('⚠ WRONG WAY!','#ff9900');beep(180,0.15);const tw=setTimeout(()=>{MG._wrongWarnCd=false;},800);MG._timers.push(tw);}return;}
-    if(MG.vsTurns>=MG.vsNeeded&&!MG._vsDone){MG._vsDone=true;spawnParts(mgCvs.width/2,mgCvs.height*0.72,'#39ff14',35);beep(880,0.1);beep(1100,0.08,0.14);MG.vsRound++;showFeedback(`✓ ${MG.vsRound}/${MG.vsGoal}`,'#39ff14');if(MG.vsRound>=MG.vsGoal){const t=setTimeout(()=>mgSuccess(),500);MG._timers.push(t);}else{const t=setTimeout(()=>{MG.vsDir=Math.random()<0.5?'left':'right';MG.vsAngle=0;MG.vsTurns=0;MG._vsDone=false;MG.vsLastDir='';},900);MG._timers.push(t);}}
+    MG.vsNetTurns=(MG.vsNetTurns||0)+diff/(Math.PI*2);
+    MG.vsTurns=Math.abs(MG.vsNetTurns);
+    if(MG.vsTurns>=MG.vsNeeded&&!MG._vsDone){MG._vsDone=true;const netDir=MG.vsNetTurns>0?'right':'left';if(netDir===MG.vsDir){spawnParts(mgCvs.width/2,mgCvs.height*0.72,'#39ff14',35);beep(880,0.1);beep(1100,0.08,0.14);MG.vsRound++;showFeedback(`✓ ${MG.vsRound}/${MG.vsGoal}`,'#39ff14');if(MG.vsRound>=MG.vsGoal){const t=setTimeout(()=>mgSuccess(),500);MG._timers.push(t);}else{const t=setTimeout(()=>{MG.vsDir=Math.random()<0.5?'left':'right';MG.vsAngle=0;MG.vsNetTurns=0;MG.vsTurns=0;MG._vsDone=false;MG.vsLastDir='';},900);MG._timers.push(t);}}else{showFeedback('✗ WRONG WAY!','#ff3333');mgFail();beep(180,0.3);const t=setTimeout(()=>{MG.vsDir=Math.random()<0.5?'left':'right';MG.vsAngle=0;MG.vsNetTurns=0;MG.vsTurns=0;MG._vsDone=false;MG.vsLastDir='';},900);MG._timers.push(t);}}
   }
   const mouseFn=e=>{
     const rect=mgCvs.getBoundingClientRect(),cw=mgCvs.clientWidth,ch=mgCvs.clientHeight,vcx=cw/2,vcy=ch*0.72;
