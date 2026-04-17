@@ -187,19 +187,31 @@ export default function MinigameScreen({ visible, room, gs, isMobile, onExit, on
               />
             </div>
             {gimmickMeta && (
-              <>
-                <button
+              isMobile ? (
+                <div
                   onClick={() => setHintOpen(v => !v)}
-                  style={{ fontSize: '10px', letterSpacing: '2px', color: hintOpen ? '#00f5ff' : '#ff6b00', background: 'none', border: `1px solid ${hintOpen ? 'rgba(0,245,255,0.4)' : 'rgba(255,107,0,0.4)'}`, padding: '5px 14px', cursor: 'pointer', borderRadius: '2px', width: '100%' }}
+                  style={{ alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: `1px solid ${hintOpen ? 'rgba(0,245,255,0.25)' : 'rgba(255,107,0,0.3)'}`, borderRadius: '2px', padding: '4px 6px', minWidth: 52, overflow: 'hidden', flexShrink: 0 }}
                 >
-                  {hintOpen ? '▲ HINT' : '▼ HINT'}
-                </button>
-                {hintOpen && (
-                  <div className="mg-sigbox" style={{ whiteSpace: 'pre-line', fontSize: '10px', color: '#7ab', padding: '8px 10px', lineHeight: '1.6' }}>
-                    {t.gimmickDesc[room.gimmick] ?? gimmickMeta.traitDesc}
-                  </div>
-                )}
-              </>
+                  {hintOpen
+                    ? <span style={{ fontSize: '9px', letterSpacing: '2px', color: 'rgba(0,245,255,0.55)', writingMode: 'vertical-lr', userSelect: 'none' }}>HINT</span>
+                    : <span style={{ fontSize: '8px', color: '#7ab', lineHeight: '1.35', whiteSpace: 'pre-line', overflow: 'hidden' }}>{t.gimmickDesc[room.gimmick] ?? gimmickMeta.traitDesc}</span>
+                  }
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setHintOpen(v => !v)}
+                    style={{ fontSize: '10px', letterSpacing: '2px', color: hintOpen ? '#00f5ff' : '#ff6b00', background: 'none', border: `1px solid ${hintOpen ? 'rgba(0,245,255,0.4)' : 'rgba(255,107,0,0.4)'}`, padding: '5px 14px', cursor: 'pointer', borderRadius: '2px', width: '100%' }}
+                  >
+                    {hintOpen ? '▲ HINT' : '▼ HINT'}
+                  </button>
+                  {hintOpen && (
+                    <div className="mg-sigbox" style={{ whiteSpace: 'pre-line', fontSize: '10px', color: '#7ab', padding: '8px 10px', lineHeight: '1.6' }}>
+                      {t.gimmickDesc[room.gimmick] ?? gimmickMeta.traitDesc}
+                    </div>
+                  )}
+                </>
+              )
             )}
           </>
         ) : (

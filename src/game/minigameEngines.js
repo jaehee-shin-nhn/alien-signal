@@ -486,6 +486,14 @@ function _rnd(a, b) { return a + Math.random() * (b - a); }
 function _inRect(x, y, r) { return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h; }
 function _shuffle(a) { const b = [...a]; for (let i = b.length-1; i>0; i--) { const j=0|Math.random()*(i+1); [b[i],b[j]]=[b[j],b[i]]; } return b; }
 
+function _alienPosMobile(cw, ch) {
+  if (cw > ch * 1.5) {
+    const sc = Math.min(0.8, ch / 140);
+    return { ax: ch * 0.45, ay: ch * 0.45, sc };
+  }
+  return { ax: cw / 2, ay: ch * 0.55, sc: 0.85 };
+}
+
 function _drawAlienFig(ctx, cx, cy, sc, bodyCol, eyeCol, tilt, extraFn) {
   const bx = cx + (tilt || 0);
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -574,7 +582,7 @@ function _drawColorBtn(ctx, MG, now, cw, ch) {
   ctx.fillStyle='rgba(200,150,255,0.5)'; ctx.font='10px monospace'; ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillText(_hint('color_btn'),cw*0.04,ch*0.04);
 }
 function _drawAlienColorBtn(ctx, MG, now, cw, ch) {
-  const ax=cw/2,ay=ch*0.55,sc=0.85;
+  const {ax,ay,sc}=_alienPosMobile(cw,ch);
   ctx.clearRect(0, 0, cw, ch);
   const step=MG.cbStep||0,seq=MG.cbSeq||[],isFlash=MG.cbFlash;
   const col=isFlash&&seq[step]!==undefined?(seq[step]===1?'#22cc00':'#cc2200'):'#2a1a3a';
@@ -644,7 +652,7 @@ function _drawRunJump(ctx, MG, now, cw, ch) {
   ctx.fillStyle='rgba(255,255,255,0.15)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText('SPACE / 클릭 = 점프',cw/2,ch-5);
 }
 function _drawAlienRunJump(ctx, MG, now, cw, ch) {
-  const t=now*0.001,ax=cw/2,ay=ch*0.55,sc=0.85;
+  const t=now*0.001;const {ax,ay,sc}=_alienPosMobile(cw,ch);
   ctx.clearRect(0, 0, cw, ch);
   const shout=MG.rjAlert,col=shout?'#cc3300':'#7b4ea0';
   if(shout){const grd=ctx.createRadialGradient(ax,ay,0,ax,ay,58);grd.addColorStop(0,'rgba(255,60,0,0.4)');grd.addColorStop(1,'transparent');ctx.fillStyle=grd;ctx.fillRect(ax-64,ay-64,128,128);}
@@ -707,7 +715,7 @@ function _drawGlowHold(ctx, MG, now, cw, ch) {
   ctx.fillStyle='rgba(255,255,255,0.12)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(_hint('glow_hold'),cw/2,ch-5);
 }
 function _drawAlienGlowHold(ctx, MG, now, cw, ch) {
-  const t=now*0.001,ax=cw/2,ay=ch*0.55,sc=0.85;
+  const t=now*0.001;const {ax,ay,sc}=_alienPosMobile(cw,ch);
   ctx.clearRect(0, 0, cw, ch);
   const glowing=MG.ghGlowing,gp=glowing?0.5+0.5*Math.sin(t*22):0;
   if(glowing){const grd=ctx.createRadialGradient(ax,ay,0,ax,ay,62);grd.addColorStop(0,`rgba(255,220,0,${0.5+0.4*gp})`);grd.addColorStop(1,'transparent');ctx.fillStyle=grd;ctx.fillRect(ax-68,ay-68,136,136);}
@@ -756,7 +764,7 @@ function _drawSymbolBody(ctx, MG, now, cw, ch) {
   ctx.fillStyle='rgba(0,180,255,0.5)';ctx.font='10px monospace';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(`${MG.sbRound||0}/${MG.sbGoal}  외계인 몸의 기호를 찾아라`,cw/2,ch*0.04);
 }
 function _drawAlienSymbolBody(ctx, MG, now, cw, ch) {
-  const t=now*0.001,ax=cw/2,ay=ch*0.55,sc=0.85;
+  const t=now*0.001;const {ax,ay,sc}=_alienPosMobile(cw,ch);
   ctx.clearRect(0, 0, cw, ch);
   _drawAlienFig(ctx,ax,ay,sc,'#3060cc','#5080cc',0);
   if(MG.sbTarget){const p2=0.7+0.3*Math.sin(t*3.5);MG.sbTarget.draw(ctx,ax,ay+2*sc,sc*0.85,`rgba(0,220,255,${p2})`);}
@@ -796,7 +804,7 @@ function _drawDirectionArrow(ctx, MG, now, cw, ch) {
   ctx.fillStyle='rgba(255,255,255,0.12)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(_hint('direction_arrow'),cw/2,ch-5);
 }
 function _drawAlienDirectionArrow(ctx, MG, now, cw, ch) {
-  const t=now*0.001,ax=cw/2,ay=ch*0.55,sc=0.85;
+  const t=now*0.001;const {ax,ay,sc}=_alienPosMobile(cw,ch);
   ctx.clearRect(0, 0, cw, ch);
   const dir=MG.daDir,waiting=MG.daWait;
   const offMap={left:[-52,0],right:[52,0],up:[0,-38],down:[0,38]};
@@ -886,7 +894,7 @@ function _drawAlienDialTilt(ctx, MG, now, cw, ch) {
   const bodyIdx=_dtBodyIdx(MG.dtSlider||0,MG.dtFreq,MG.dtPhase);
   const headColor=_DT_COLORS[MG.dtHeadIdx],bodyColor=_DT_COLORS[bodyIdx];
   const matched=bodyIdx===MG.dtHeadIdx;
-  const ax=cw/2,ay=ch*0.55,sc=0.85;
+  const {ax,ay,sc}=_alienPosMobile(cw,ch);
   if(matched){const gp=0.5+0.5*Math.sin(now*0.009);const grd=ctx.createRadialGradient(ax,ay,0,ax,ay,60);grd.addColorStop(0,`rgba(255,255,100,${0.5*gp})`);grd.addColorStop(1,'transparent');ctx.fillStyle=grd;ctx.fillRect(0,0,cw,ch);}
   ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(ax,ay+22*sc,14*sc,4*sc,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=bodyColor;ctx.fillRect(ax-11*sc,ay+14*sc,9*sc,14*sc);ctx.fillRect(ax+2*sc,ay+14*sc,9*sc,14*sc);
@@ -937,7 +945,7 @@ function _drawWireConnect(ctx, MG, now, cw, ch) {
   void t;
 }
 function _drawAlienWireConnect(ctx, MG, now, cw, ch) {
-  const t=now*0.001,ax=cw/2,ay=ch*0.55,sc=0.85;
+  const t=now*0.001;const {ax,ay,sc}=_alienPosMobile(cw,ch);
   ctx.clearRect(0, 0, cw, ch);
   const hintCol=MG.wcHintColor,faceCol=hintCol||'#9b6ec0',bodyCol=hintCol?'#334466':'#2a1a40';
   _drawAlienFig(ctx,ax,ay,sc,bodyCol,faceCol,0,(c,bx,by)=>{
@@ -996,7 +1004,7 @@ function _drawValveSpin(ctx, MG, now, cw, ch) {
   ctx.fillStyle='rgba(255,255,255,0.12)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(_hint('valve_spin'),cw/2,ch-5);
 }
 function _drawAlienValveSpin(ctx, MG, now, cw, ch) {
-  const ax=cw/2,ay=ch*0.55,sc=0.85;
+  const {ax,ay,sc}=_alienPosMobile(cw,ch);
   ctx.clearRect(0, 0, cw, ch);
   MG.vsAlienAngle=(MG.vsAlienAngle||0)+(MG.vsDir==='left'?-1.8:1.8)*0.02;
   const prog=Math.min(1,(MG.vsTurns||0)/(MG.vsNeeded||2));
